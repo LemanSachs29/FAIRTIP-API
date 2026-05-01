@@ -18,8 +18,16 @@ class EmployeeDayOff(db.Model):
     )
 
     __table_args__ = (
-        db.UniqueConstraint("employee_id", "weekday"),
+        db.UniqueConstraint(
+            "employee_id",
+            "weekday",
+            name="uq_employee_day_offs_employee_weekday"
+        ),
+        db.CheckConstraint(
+            "weekday IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')",
+            name="ck_employee_day_offs_weekday_valid"
+        ),
     )
-
+    
     def __repr__(self):
         return f"<DayOff {self.weekday} for employee {self.employee_id}>"
