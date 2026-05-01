@@ -30,7 +30,18 @@ class DistributionEntry(db.Model):
     )
 
     __table_args__ = (
-        db.UniqueConstraint("distribution_id", "employee_id", name="uq_distribution_employee"),
+        db.UniqueConstraint(
+            "distribution_id",
+            "employee_id",
+            name="uq_distribution_employee"
+        ),
+        db.CheckConstraint("day_off_count >= 0", name="ck_distribution_entries_day_off_count_non_negative"),
+        db.CheckConstraint("absence_count >= 0", name="ck_distribution_entries_absence_count_non_negative"),
+        db.CheckConstraint("worked_days >= 0", name="ck_distribution_entries_worked_days_non_negative"),
+        db.CheckConstraint("computed_hours >= 0", name="ck_distribution_entries_computed_hours_non_negative"),
+        db.CheckConstraint("exact_amount >= 0", name="ck_distribution_entries_exact_amount_non_negative"),
+        db.CheckConstraint("rounded_amount >= 0", name="ck_distribution_entries_rounded_amount_non_negative"),
+        db.CheckConstraint("average_daily_hours_snapshot > 0", name="ck_distribution_entries_avg_hours_snapshot_positive"),
     )
 
     def __repr__(self):
