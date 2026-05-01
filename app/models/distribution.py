@@ -30,5 +30,16 @@ class Distribution(db.Model):
         nullable=False
     )
 
+    __table_args__ = (
+        db.CheckConstraint("end_date >= start_date"),
+        db.CheckConstraint("total_computed_hours > 0"),
+        db.CheckConstraint("total_tip_amount >= 0"),
+        db.CheckConstraint("tip_per_hour >= 0"),
+        db.CheckConstraint("total_exact_amount >= 0"),
+        db.CheckConstraint("total_rounded_amount >= 0"),
+        db.CheckConstraint("remainder_amount >= 0"),
+    )
+
+
     def __repr__(self):
         return f"<Distribution {self.start_date} - {self.end_date}>"
