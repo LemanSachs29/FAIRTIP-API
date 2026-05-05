@@ -11,6 +11,9 @@ def create_app():
     migrate.init_app(app, db)
 
     from app import models
+    from app.routes.employees import employees_bp
+
+    app.register_blueprint(employees_bp)
 
     @app.route("/")
     def home():
