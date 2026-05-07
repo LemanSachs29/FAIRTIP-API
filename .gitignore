@@ -13,3 +13,16 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Flask
+instance/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+
+# Alembic cache
+*.log
+
+# SQLite
+*.db
