@@ -1,6 +1,7 @@
 from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
@@ -39,7 +40,9 @@ def serialize_day_off(day_off):
 
 
 @employees_bp.post("")
+@jwt_required()
 def create_employee():
+    user_id = int(get_jwt_identity())
     data = request.get_json(silent=True)
 
     if not data:
@@ -68,6 +71,7 @@ def create_employee():
         name=name,
         surname=surname,
         average_daily_hours=average_daily_hours,
+        user_id=user_id,
     )
 
     try:
@@ -81,26 +85,36 @@ def create_employee():
 
 
 @employees_bp.get("")
+@jwt_required()
 def list_employees():
-    employees = Employee.query.order_by(Employee.id.asc()).all()
+    user_id = int(get_jwt_identity())
+
+    employees = Employee.query.filter_by(
+        user_id=user_id
+    ).order_by(Employee.id.asc()).all()
+
     return jsonify([serialize_employee(employee) for employee in employees]), 200
 
 
 @employees_bp.get("/<int:employee_id>")
+@jwt_required()
 def get_employee(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     return jsonify(serialize_employee(employee)), 200
 
 
 @employees_bp.put("/<int:employee_id>")
+@jwt_required()
 def update_employee(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     data = request.get_json(silent=True)
@@ -141,10 +155,12 @@ def update_employee(employee_id):
 
 
 @employees_bp.delete("/<int:employee_id>")
+@jwt_required()
 def delete_employee(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     try:
@@ -160,10 +176,12 @@ def delete_employee(employee_id):
 
 
 @employees_bp.post("/<int:employee_id>/day-offs")
+@jwt_required()
 def create_employee_day_off(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     data = request.get_json(silent=True)
@@ -200,10 +218,12 @@ def create_employee_day_off(employee_id):
 
 
 @employees_bp.get("/<int:employee_id>/day-offs")
+@jwt_required()
 def list_employee_day_offs(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     day_offs = EmployeeDayOff.query.filter_by(
@@ -214,10 +234,12 @@ def list_employee_day_offs(employee_id):
 
 
 @employees_bp.delete("/<int:employee_id>/day-offs/<int:day_off_id>")
+@jwt_required()
 def delete_employee_day_off(employee_id, day_off_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     day_off = db.session.get(EmployeeDayOff, day_off_id)
