@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.extensions import db
@@ -35,10 +36,12 @@ def parse_date(value, field_name):
 
 
 @absences_bp.post("/<int:employee_id>/absences")
+@jwt_required()
 def create_employee_absence(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     data = request.get_json(silent=True)
@@ -83,10 +86,12 @@ def create_employee_absence(employee_id):
 
 
 @absences_bp.get("/<int:employee_id>/absences")
+@jwt_required()
 def list_employee_absences(employee_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     start_date = request.args.get("start_date")
@@ -124,10 +129,12 @@ def list_employee_absences(employee_id):
 
 
 @absences_bp.delete("/<int:employee_id>/absences/<int:absence_id>")
+@jwt_required()
 def delete_employee_absence(employee_id, absence_id):
+    user_id = int(get_jwt_identity())
     employee = db.session.get(Employee, employee_id)
 
-    if employee is None:
+    if employee is None or employee.user_id != user_id:
         return jsonify({"error": "Employee not found"}), 404
 
     absence = db.session.get(Absence, absence_id)
