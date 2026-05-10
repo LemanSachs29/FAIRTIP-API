@@ -1,0 +1,807 @@
+openapi: 3.0.3
+info:
+  title: Fairtip API
+  version: 1.0.0
+  description: |
+    Fairtip is a tip distribution system for restaurants. This OpenAPI specification documents the REST API used by the backend engine, including authentication, employee management, day offs, absences, and tip distributions.
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      description: Standard error response body.
+      properties:
+        error:
+          type: string
+          example: Invalid credentials
+    AuthRegisterRequest:
+      type: object
+      description: Request body to register a new user.
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: StrongPassword123!
+    AuthLoginRequest:
+      type: object
+      description: Request body to authenticate a user.
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: StrongPassword123!
+    AuthLoginResponse:
+      type: object
+      description: Login response containing a JWT access token.
+      properties:
+        access_token:
+          type: string
+          description: JWT token for authenticated requests.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    EmployeeRequest:
+      type: object
+      description: Request body to create or update an employee.
+      required:
+        - name
+        - surname
+        - average_daily_hours
+      properties:
+        name:
+          type: string
+          example: Maria
+        surname:
+          type: string
+          example: Lopez
+        average_daily_hours:
+          type: string
+          description: Daily average work hours stored as a decimal string.
+          example: "8.50"
+    EmployeeResponse:
+      type: object
+      description: Employee record returned by the API.
+      properties:
+        id:
+          type: integer
+          example: 14
+        name:
+          type: string
+          example: Maria
+        surname:
+          type: string
+          example: Lopez
+        average_daily_hours:
+          type: string
+          description: Stored average daily hours.
+          example: "8.50"
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-05-10T15:20:30Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2026-05-10T15:20:30Z
+    EmployeeDayOffRequest:
+      type: object
+      description: Request body to create an employee day off entry.
+      required:
+        - weekday
+      properties:
+        weekday:
+          type: string
+          description: Day of the week when the employee is not available.
+          enum:
+            - Monday
+            - Tuesday
+            - Wednesday
+            - Thursday
+            - Friday
+            - Saturday
+            - Sunday
+          example: Monday
+    EmployeeDayOffResponse:
+      type: object
+      description: Employee day off record.
+      properties:
+        id:
+          type: integer
+          example: 8
+        employee_id:
+          type: integer
+          example: 14
+        weekday:
+          type: string
+          example: Monday
+    AbsenceRequest:
+      type: object
+      description: Request body to create an employee absence record.
+      required:
+        - date
+      properties:
+        date:
+          type: string
+          format: date
+          description: Absence date in YYYY-MM-DD format.
+          example: 2026-06-01
+    AbsenceResponse:
+      type: object
+      description: Employee absence record.
+      properties:
+        id:
+          type: integer
+          example: 5
+        employee_id:
+          type: integer
+          example: 14
+        date:
+          type: string
+          format: date
+          example: 2026-06-01
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-05-10T15:20:30Z
+    DistributionEntryResponse:
+      type: object
+      description: A single employee amount entry inside a distribution.
+      properties:
+        id:
+          type: integer
+          example: 22
+        employee_id:
+          type: integer
+          example: 14
+        day_off_count:
+          type: integer
+          example: 1
+        absence_count:
+          type: integer
+          example: 0
+        worked_days:
+          type: integer
+          example: 25
+        computed_hours:
+          type: string
+          description: Computed hours for this employee during the distribution period.
+          example: "212.50"
+        exact_amount:
+          type: string
+          example: "1050.6250"
+        rounded_amount:
+          type: string
+          example: "1050.62"
+        average_daily_hours_snapshot:
+          type: string
+          example: "8.50"
+        name:
+          type: string
+          example: Maria
+        surname:
+          type: string
+          example: Lopez
+    DistributionRequest:
+      type: object
+      description: Request body to create a tip distribution for a date range.
+      required:
+        - start_date
+        - end_date
+        - total_tip_amount
+      properties:
+        start_date:
+          type: string
+          format: date
+          description: Distribution start date in YYYY-MM-DD format.
+          example: 2026-06-01
+        end_date:
+          type: string
+          format: date
+          description: Distribution end date in YYYY-MM-DD format.
+          example: 2026-06-30
+        total_tip_amount:
+          type: string
+          description: Total tip amount to distribute, stored as a decimal string.
+          example: "2500.00"
+    DistributionResponse:
+      type: object
+      description: Tip distribution summary with computed entries.
+      properties:
+        id:
+          type: integer
+          example: 9
+        start_date:
+          type: string
+          format: date
+          example: 2026-06-01
+        end_date:
+          type: string
+          format: date
+          example: 2026-06-30
+        total_tip_amount:
+          type: string
+          example: "2500.00"
+        total_computed_hours:
+          type: string
+          example: "212.50"
+        tip_per_hour:
+          type: string
+          example: "11.7647"
+        total_exact_amount:
+          type: string
+          example: "2500.0000"
+        total_rounded_amount:
+          type: string
+          example: "2499.99"
+        remainder_amount:
+          type: string
+          example: "0.01"
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-06-01T12:00:00Z
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistributionEntryResponse'
+  responses:
+    BadRequest:
+      description: Invalid request data or missing required fields.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missingField:
+              summary: Missing required field
+              value:
+                error: start_date, end_date and total_tip_amount are required
+            invalidFormat:
+              summary: Invalid date format or numeric value
+              value:
+                error: start_date must be YYYY-MM-DD
+    Unauthorized:
+      description: Missing or invalid authentication credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidToken:
+              summary: Invalid credentials
+              value:
+                error: Invalid credentials
+    NotFound:
+      description: Resource not found or not accessible by the current user.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            notFound:
+              summary: Employee not found
+              value:
+                error: Employee not found
+    Conflict:
+      description: Conflict due to existing resource or relational constraint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            duplicateEmail:
+              summary: Email already registered
+              value:
+                error: Email already registered
+            duplicateAbsence:
+              summary: Duplicate absence for the same date
+              value:
+                error: Employee already has an absence on this date
+            duplicateDayOff:
+              summary: Day off already exists for employee
+              value:
+                error: Employee already has this day off
+            deleteConflict:
+              summary: Employee deletion prevented by existing related records
+              value:
+                error: Could not delete employee. It may be linked to absences, day offs or distributions.
+    InternalServerError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            serverFailure:
+              summary: Generic server error
+              value:
+                error: Could not create distribution
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+    description: Authentication endpoints for registering and logging in users.
+  - name: Employees
+    description: Employee CRUD operations and employee-level management.
+  - name: Employee Day Offs
+    description: Day off management for employee schedules.
+  - name: Absences
+    description: Absence tracking for employees.
+  - name: Distributions
+    description: Tip distribution calculation and summary generation.
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user account.
+      description: Create a new user with email and password. This endpoint does not require authentication.
+      requestBody:
+        description: User registration data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterRequest'
+            examples:
+              registerExample:
+                value:
+                  email: user@example.com
+                  password: StrongPassword123!
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Log in to obtain a JWT access token.
+      description: Authenticate a registered user and receive a bearer token for protected endpoints.
+      requestBody:
+        description: User login credentials.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+            examples:
+              loginExample:
+                value:
+                  email: user@example.com
+                  password: StrongPassword123!
+      responses:
+        '200':
+          description: Successful authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /employees:
+    post:
+      tags:
+        - Employees
+      summary: Create a new employee.
+      description: Create a new employee record for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Employee data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+            examples:
+              employeeCreate:
+                value:
+                  name: Maria
+                  surname: Lopez
+                  average_daily_hours: "8.50"
+      responses:
+        '201':
+          description: Employee created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - Employees
+      summary: List all employees for the authenticated user.
+      description: Retrieve every employee record owned by the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Employee list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /employees/{employee_id}:
+    parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the employee.
+    get:
+      tags:
+        - Employees
+      summary: Get a single employee by ID.
+      description: Retrieve employee details if the employee belongs to the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Employee details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Employees
+      summary: Update an existing employee.
+      description: Update the employee record for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Updated employee data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+            examples:
+              employeeUpdate:
+                value:
+                  name: Maria
+                  surname: Garcia
+                  average_daily_hours: "9.00"
+      responses:
+        '200':
+          description: Employee updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Employees
+      summary: Delete an employee.
+      description: Remove an employee owned by the authenticated user. Deletion may fail if the employee is linked to absences, day offs, or distributions.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Employee deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Employee deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /employees/{employee_id}/day-offs:
+    parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the employee.
+    post:
+      tags:
+        - Employee Day Offs
+      summary: Add a day off for an employee.
+      description: Create a new employee day off entry for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Day off data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeDayOffRequest'
+            examples:
+              dayOffCreate:
+                value:
+                  weekday: Friday
+      responses:
+        '201':
+          description: Employee day off created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeDayOffResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - Employee Day Offs
+      summary: List day offs for an employee.
+      description: Retrieve all configured day offs for the given employee.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of employee day offs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeDayOffResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /employees/{employee_id}/day-offs/{day_off_id}:
+    parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the employee.
+      - name: day_off_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the day off entry.
+    delete:
+      tags:
+        - Employee Day Offs
+      summary: Delete an employee day off.
+      description: Remove a day off entry for the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Employee day off deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Employee day off deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /employees/{employee_id}/absences:
+    parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the employee.
+    post:
+      tags:
+        - Absences
+      summary: Add an absence for an employee.
+      description: Create a new absence record for the given employee.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Absence data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceRequest'
+            examples:
+              absenceCreate:
+                value:
+                  date: 2026-06-15
+      responses:
+        '201':
+          description: Employee absence created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - Absences
+      summary: List absences for an employee.
+      description: Retrieve absences for an employee, optionally filtered by start and end date.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter results on or after this date.
+          example: 2026-06-01
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter results on or before this date.
+          example: 2026-06-30
+      responses:
+        '200':
+          description: List of employee absences.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /employees/{employee_id}/absences/{absence_id}:
+    parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the employee.
+      - name: absence_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the absence entry.
+    delete:
+      tags:
+        - Absences
+      summary: Delete an employee absence.
+      description: Remove an absence record for the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Employee absence deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Employee absence deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /distributions:
+    post:
+      tags:
+        - Distributions
+      summary: Calculate and store a tip distribution.
+      description: Create a tip distribution for the authenticated user based on the period, employee hours, absences, and day offs.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Distribution input data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistributionRequest'
+            examples:
+              distributionCreate:
+                value:
+                  start_date: 2026-06-01
+                  end_date: 2026-06-30
+                  total_tip_amount: "2500.00"
+      responses:
+        '201':
+          description: Distribution created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
