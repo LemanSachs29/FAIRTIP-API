@@ -14,10 +14,12 @@ def create_app():
     from app import models
     from app.routes.absences import absences_bp
     from app.routes.auth import auth_bp
+    from app.routes.distributions import distributions_bp
     from app.routes.employees import employees_bp
 
     app.register_blueprint(absences_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(distributions_bp)
     app.register_blueprint(employees_bp)
 
     @app.route("/")
