@@ -40,6 +40,8 @@ def serialize_distribution_entry(entry):
         "exact_amount": str(entry.exact_amount),
         "rounded_amount": str(entry.rounded_amount),
         "average_daily_hours_snapshot": str(entry.average_daily_hours_snapshot),
+        "name": entry.employee.name,
+        "surname": entry.employee.surname,
     }
 
 

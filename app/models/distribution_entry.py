@@ -29,6 +29,8 @@ class DistributionEntry(db.Model):
         nullable=False
     )
 
+    employee = db.relationship('Employee', backref='distribution_entries')
+
     __table_args__ = (
         db.UniqueConstraint(
             "distribution_id",
