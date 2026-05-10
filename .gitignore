@@ -26,3 +26,6 @@ instance/
 
 # SQLite
 *.db
+
+# REST Client
+bruno/
