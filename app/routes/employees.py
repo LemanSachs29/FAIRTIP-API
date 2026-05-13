@@ -1,11 +1,14 @@
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
 
 from app.extensions import db
-from app.models import Distribution, DistributionEntry, Employee, EmployeeDayOff
+from app.models import Absence, Distribution, DistributionEntry, Employee, EmployeeDayOff
 
 
 employees_bp = Blueprint("employees", __name__, url_prefix="/employees")
@@ -26,6 +29,19 @@ def serialize_employee(employee):
         "name": employee.name,
         "surname": employee.surname,
         "average_daily_hours": str(employee.average_daily_hours),
+        "created_at": employee.created_at.isoformat(),
+        "updated_at": employee.updated_at.isoformat(),
+    }
+
+
+def serialize_employee_list_item(employee, day_offs, absence_count):
+    return {
+        "id": employee.id,
+        "name": employee.name,
+        "surname": employee.surname,
+        "average_daily_hours": str(employee.average_daily_hours),
+        "day_offs": [day_off.weekday for day_off in day_offs],
+        "absence_count_30d": absence_count,
         "created_at": employee.created_at.isoformat(),
         "updated_at": employee.updated_at.isoformat(),
     }
@@ -89,11 +105,34 @@ def create_employee():
 def list_employees():
     user_id = int(get_jwt_identity())
 
-    employees = Employee.query.filter_by(
-        user_id=user_id
-    ).order_by(Employee.id.asc()).all()
+    employees = (
+        Employee.query.options(selectinload(Employee.day_off_entries))
+        .filter_by(user_id=user_id)
+        .order_by(Employee.id.asc())
+        .all()
+    )
 
-    return jsonify([serialize_employee(employee) for employee in employees]), 200
+    # Query absence counts for the last 30 days
+    thirty_days_ago = date.today() - timedelta(days=30)
+    absence_counts_query = (
+        db.session.query(
+            Absence.employee_id,
+            func.count(Absence.id).label("absence_count"),
+        )
+        .filter(Absence.date >= thirty_days_ago)
+        .group_by(Absence.employee_id)
+        .all()
+    )
+    absence_counts = {emp_id: count for emp_id, count in absence_counts_query}
+
+    return jsonify([
+        serialize_employee_list_item(
+            employee,
+            employee.day_off_entries,
+            absence_counts.get(employee.id, 0),
+        )
+        for employee in employees
+    ]), 200
 
 
 @employees_bp.get("/<int:employee_id>")

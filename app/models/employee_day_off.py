@@ -17,6 +17,8 @@ class EmployeeDayOff(db.Model):
         nullable=False
     )
 
+    employee = db.relationship('Employee', backref='day_off_entries')
+
     __table_args__ = (
         db.UniqueConstraint(
             "employee_id",

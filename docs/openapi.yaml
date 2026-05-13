@@ -94,6 +94,16 @@ components:
           type: string
           description: Stored average daily hours.
           example: "8.50"
+        day_offs:
+          type: array
+          description: List of weekdays when the employee has a day off.
+          items:
+            type: string
+          example: ["Monday", "Tuesday"]
+        absence_count_30d:
+          type: integer
+          description: Number of absences recorded in the last 30 days.
+          example: 2
         created_at:
           type: string
           format: date-time
