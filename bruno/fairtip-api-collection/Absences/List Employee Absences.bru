@@ -1,0 +1,25 @@
+meta {
+  name: List Employee Absences
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/employees/:employee_id/absences
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~start_date: 2026-05-01
+  ~end_date: 2026-05-05
+}
+
+params:path {
+  employee_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

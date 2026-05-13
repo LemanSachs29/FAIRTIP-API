@@ -1,0 +1,15 @@
+meta {
+  name: Get Distributions
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/distributions
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

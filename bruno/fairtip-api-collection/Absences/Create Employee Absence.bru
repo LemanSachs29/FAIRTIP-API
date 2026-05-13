@@ -1,0 +1,26 @@
+meta {
+  name: Create Employee Absence
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/employees/:employee_id/absences
+  body: json
+  auth: inherit
+}
+
+params:path {
+  employee_id: 
+}
+
+body:json {
+  {
+    "date": "2026-10-06"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

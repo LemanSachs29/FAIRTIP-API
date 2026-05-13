@@ -1,0 +1,24 @@
+meta {
+  name: List Employee Day Offs
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/employees/:employee_id/day-offs
+  body: json
+  auth: inherit
+}
+
+params:path {
+  employee_id: 1
+}
+
+headers {
+  Content-Type: application/json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Get Distribution by id
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/distributions/:distribution_id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  distribution_id: 8
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

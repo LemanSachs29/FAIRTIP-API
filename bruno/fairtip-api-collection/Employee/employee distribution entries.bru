@@ -1,0 +1,20 @@
+meta {
+  name: employee distribution entries
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/employees/:employee_id/distribution-entries
+  body: none
+  auth: inherit
+}
+
+params:path {
+  employee_id: 7
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

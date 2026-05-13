@@ -1,0 +1,24 @@
+meta {
+  name: Get Employee By Id
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/employees/:employee_id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  employee_id: 1
+}
+
+headers {
+  Content-Type: application/vnd.api+json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

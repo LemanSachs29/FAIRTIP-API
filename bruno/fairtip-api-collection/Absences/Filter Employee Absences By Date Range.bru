@@ -1,0 +1,25 @@
+meta {
+  name: Filter Employee Absences By Date Range
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/employees/:employee_id/absences?start_date=2026-05-20&end_date=2026-05-23
+  body: none
+  auth: inherit
+}
+
+params:query {
+  start_date: 2026-05-20
+  end_date: 2026-05-23
+}
+
+params:path {
+  employee_id: 
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

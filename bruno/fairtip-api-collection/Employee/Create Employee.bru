@@ -1,0 +1,28 @@
+meta {
+  name: Create Employee
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:5000/employees
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Ahmed",
+    "surname": "Apellido Genérico",
+    "average_daily_hours": 4
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

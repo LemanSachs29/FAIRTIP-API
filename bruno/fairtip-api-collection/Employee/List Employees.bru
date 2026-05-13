@@ -1,0 +1,20 @@
+meta {
+  name: List Employees
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://127.0.0.1:5000/employees
+  body: none
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/vnd.api+json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
