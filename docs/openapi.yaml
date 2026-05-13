@@ -190,7 +190,7 @@ components:
           example: "1050.6250"
         rounded_amount:
           type: string
-          example: "1050.62"
+          example: "1050.00"
         average_daily_hours_snapshot:
           type: string
           example: "8.50"
@@ -224,7 +224,7 @@ components:
           example: "2500.00"
     DistributionResponse:
       type: object
-      description: Tip distribution summary with computed entries.
+      description: Full tip distribution with computed entries.
       properties:
         id:
           type: integer
@@ -251,10 +251,10 @@ components:
           example: "2500.0000"
         total_rounded_amount:
           type: string
-          example: "2499.99"
+          example: "2495.00"
         remainder_amount:
           type: string
-          example: "0.01"
+          example: "5.00"
         created_at:
           type: string
           format: date-time
@@ -263,6 +263,43 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DistributionEntryResponse'
+    DistributionSummaryResponse:
+      type: object
+      description: Lightweight tip distribution summary for list views.
+      properties:
+        id:
+          type: integer
+          example: 9
+        start_date:
+          type: string
+          format: date
+          example: 2026-06-01
+        end_date:
+          type: string
+          format: date
+          example: 2026-06-30
+        total_tip_amount:
+          type: string
+          example: "2500.00"
+        total_computed_hours:
+          type: string
+          example: "212.50"
+        tip_per_hour:
+          type: string
+          example: "11.7647"
+        total_rounded_amount:
+          type: string
+          example: "2495.00"
+        remainder_amount:
+          type: string
+          example: "5.00"
+        entry_count:
+          type: integer
+          example: 7
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-06-01T12:00:00Z
   responses:
     BadRequest:
       description: Invalid request data or missing required fields.
@@ -772,6 +809,24 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /distributions:
+    get:
+      tags:
+        - Distributions
+      summary: List tip distributions.
+      description: Retrieve lightweight distribution summaries owned by the authenticated user, ordered by creation date descending.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Distribution summary list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DistributionSummaryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags:
         - Distributions
@@ -805,3 +860,29 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /distributions/{distribution_id}:
+    parameters:
+      - name: distribution_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the distribution.
+    get:
+      tags:
+        - Distributions
+      summary: Get a single tip distribution.
+      description: Retrieve the full distribution and entries if it belongs to the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Distribution details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'

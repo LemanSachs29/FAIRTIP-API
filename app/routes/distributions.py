@@ -3,7 +3,9 @@ from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
 
 from app.extensions import db
 from app.models import Distribution, DistributionEntry
@@ -13,19 +15,23 @@ from app.services.distribution_service import calculate_distribution
 distributions_bp = Blueprint("distributions", __name__, url_prefix="/distributions")
 
 
-def serialize_distribution(distribution, entries):
+def serialize_decimal(value, decimal_places):
+    quantizer = Decimal("1").scaleb(-decimal_places)
+    return str(Decimal(value).quantize(quantizer))
+
+
+def serialize_distribution_summary(distribution, entry_count):
     return {
         "id": distribution.id,
         "start_date": distribution.start_date.isoformat(),
         "end_date": distribution.end_date.isoformat(),
-        "total_tip_amount": str(distribution.total_tip_amount),
-        "total_computed_hours": str(distribution.total_computed_hours),
-        "tip_per_hour": str(distribution.tip_per_hour),
-        "total_exact_amount": str(distribution.total_exact_amount),
-        "total_rounded_amount": str(distribution.total_rounded_amount),
-        "remainder_amount": str(distribution.remainder_amount),
+        "total_tip_amount": serialize_decimal(distribution.total_tip_amount, 2),
+        "total_computed_hours": serialize_decimal(distribution.total_computed_hours, 2),
+        "tip_per_hour": serialize_decimal(distribution.tip_per_hour, 4),
+        "total_rounded_amount": serialize_decimal(distribution.total_rounded_amount, 2),
+        "remainder_amount": serialize_decimal(distribution.remainder_amount, 2),
+        "entry_count": entry_count,
         "created_at": distribution.created_at.isoformat(),
-        "entries": entries,
     }
 
 
@@ -36,12 +42,31 @@ def serialize_distribution_entry(entry):
         "day_off_count": entry.day_off_count,
         "absence_count": entry.absence_count,
         "worked_days": entry.worked_days,
-        "computed_hours": str(entry.computed_hours),
-        "exact_amount": str(entry.exact_amount),
-        "rounded_amount": str(entry.rounded_amount),
-        "average_daily_hours_snapshot": str(entry.average_daily_hours_snapshot),
+        "computed_hours": serialize_decimal(entry.computed_hours, 2),
+        "exact_amount": serialize_decimal(entry.exact_amount, 4),
+        "rounded_amount": serialize_decimal(entry.rounded_amount, 2),
+        "average_daily_hours_snapshot": serialize_decimal(
+            entry.average_daily_hours_snapshot,
+            2,
+        ),
         "name": entry.employee.name,
         "surname": entry.employee.surname,
+    }
+
+
+def serialize_distribution_detail(distribution, entries):
+    return {
+        "id": distribution.id,
+        "start_date": distribution.start_date.isoformat(),
+        "end_date": distribution.end_date.isoformat(),
+        "total_tip_amount": serialize_decimal(distribution.total_tip_amount, 2),
+        "total_computed_hours": serialize_decimal(distribution.total_computed_hours, 2),
+        "tip_per_hour": serialize_decimal(distribution.tip_per_hour, 4),
+        "total_exact_amount": serialize_decimal(distribution.total_exact_amount, 4),
+        "total_rounded_amount": serialize_decimal(distribution.total_rounded_amount, 2),
+        "remainder_amount": serialize_decimal(distribution.remainder_amount, 2),
+        "created_at": distribution.created_at.isoformat(),
+        "entries": [serialize_distribution_entry(entry) for entry in entries],
     }
 
 
@@ -58,6 +83,56 @@ def parse_date(value, field_name):
         return None, jsonify({"error": f"{field_name} must be YYYY-MM-DD"}), 400
 
     return parsed_date, None, None
+
+
+@distributions_bp.get("")
+@jwt_required()
+def list_distributions():
+    user_id = int(get_jwt_identity())
+
+    entry_counts = (
+        db.session.query(
+            DistributionEntry.distribution_id,
+            func.count(DistributionEntry.id).label("entry_count"),
+        )
+        .group_by(DistributionEntry.distribution_id)
+        .subquery()
+    )
+
+    distributions = (
+        db.session.query(
+            Distribution,
+            func.coalesce(entry_counts.c.entry_count, 0).label("entry_count"),
+        )
+        .outerjoin(entry_counts, Distribution.id == entry_counts.c.distribution_id)
+        .filter(Distribution.user_id == user_id)
+        .order_by(Distribution.created_at.desc())
+        .all()
+    )
+
+    return jsonify([
+        serialize_distribution_summary(distribution, int(entry_count))
+        for distribution, entry_count in distributions
+    ]), 200
+
+
+@distributions_bp.get("/<int:distribution_id>")
+@jwt_required()
+def get_distribution(distribution_id):
+    user_id = int(get_jwt_identity())
+    distribution = db.session.get(Distribution, distribution_id)
+
+    if distribution is None or distribution.user_id != user_id:
+        return jsonify({"error": "Distribution not found"}), 404
+
+    entries = (
+        DistributionEntry.query.options(joinedload(DistributionEntry.employee))
+        .filter_by(distribution_id=distribution.id)
+        .order_by(DistributionEntry.id.asc())
+        .all()
+    )
+
+    return jsonify(serialize_distribution_detail(distribution, entries)), 200
 
 
 @distributions_bp.post("")
@@ -121,7 +196,6 @@ def create_distribution():
         db.session.add(distribution)
         db.session.flush()
 
-        entries = []
         for entry_data in result["entries"]:
             entry = DistributionEntry(
                 distribution_id=distribution.id,
@@ -135,12 +209,17 @@ def create_distribution():
                 average_daily_hours_snapshot=entry_data["average_daily_hours_snapshot"],
             )
             db.session.add(entry)
-            entries.append(entry)
 
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
         return jsonify({"error": "Could not create distribution"}), 500
 
-    serialized_entries = [serialize_distribution_entry(entry) for entry in entries]
-    return jsonify(serialize_distribution(distribution, serialized_entries)), 201
+    entries = (
+        DistributionEntry.query.options(joinedload(DistributionEntry.employee))
+        .filter_by(distribution_id=distribution.id)
+        .order_by(DistributionEntry.id.asc())
+        .all()
+    )
+
+    return jsonify(serialize_distribution_detail(distribution, entries)), 201
