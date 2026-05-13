@@ -200,6 +200,43 @@ components:
         surname:
           type: string
           example: Lopez
+    EmployeeDistributionEntryResponse:
+      type: object
+      description: A lightweight distribution history row for an employee.
+      properties:
+        distribution_id:
+          type: integer
+          example: 9
+        entry_id:
+          type: integer
+          example: 22
+        start_date:
+          type: string
+          format: date
+          example: 2026-06-01
+        end_date:
+          type: string
+          format: date
+          example: 2026-06-30
+        worked_days:
+          type: integer
+          example: 25
+        computed_hours:
+          type: string
+          example: "212.50"
+        exact_amount:
+          type: string
+          example: "1050.6250"
+        rounded_amount:
+          type: string
+          example: "1050.00"
+        average_daily_hours_snapshot:
+          type: string
+          example: "8.50"
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-06-01T12:00:00
     DistributionRequest:
       type: object
       description: Request body to create a tip distribution for a date range.
@@ -648,6 +685,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/EmployeeDayOffResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /employees/{employee_id}/distribution-entries:
+    parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The unique identifier of the employee.
+    get:
+      tags:
+        - Employees
+      summary: List distribution history entries for an employee.
+      description: Retrieve the employee's distribution rows with distribution period and creation date if the employee belongs to the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Employee distribution history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeDistributionEntryResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':

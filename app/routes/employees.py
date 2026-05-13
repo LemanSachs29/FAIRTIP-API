@@ -5,7 +5,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.models import Employee, EmployeeDayOff
+from app.models import Distribution, DistributionEntry, Employee, EmployeeDayOff
 
 
 employees_bp = Blueprint("employees", __name__, url_prefix="/employees")
@@ -106,6 +106,47 @@ def get_employee(employee_id):
         return jsonify({"error": "Employee not found"}), 404
 
     return jsonify(serialize_employee(employee)), 200
+
+
+def serialize_distribution_history_entry(entry, distribution):
+    return {
+        "distribution_id": distribution.id,
+        "entry_id": entry.id,
+        "start_date": distribution.start_date.isoformat(),
+        "end_date": distribution.end_date.isoformat(),
+        "worked_days": entry.worked_days,
+        "computed_hours": str(entry.computed_hours),
+        "exact_amount": str(entry.exact_amount),
+        "rounded_amount": str(entry.rounded_amount),
+        "average_daily_hours_snapshot": str(entry.average_daily_hours_snapshot),
+        "created_at": distribution.created_at.isoformat(),
+    }
+
+
+@employees_bp.get("/<int:employee_id>/distribution-entries")
+@jwt_required()
+def list_employee_distribution_entries(employee_id):
+    user_id = int(get_jwt_identity())
+    employee = db.session.get(Employee, employee_id)
+
+    if employee is None or employee.user_id != user_id:
+        return jsonify({"error": "Employee not found"}), 404
+
+    results = (
+        db.session.query(DistributionEntry, Distribution)
+        .join(Distribution, DistributionEntry.distribution_id == Distribution.id)
+        .filter(
+            DistributionEntry.employee_id == employee_id,
+            Distribution.user_id == user_id,
+        )
+        .order_by(Distribution.created_at.desc())
+        .all()
+    )
+
+    return jsonify([
+        serialize_distribution_history_entry(entry, distribution)
+        for entry, distribution in results
+    ]), 200
 
 
 @employees_bp.put("/<int:employee_id>")
