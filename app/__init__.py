@@ -9,7 +9,11 @@ def create_app():
 
     #config
     app.config.from_object(Config)
-    print("CORS_ORIGINS:", app.config["CORS_ORIGINS"])
+
+
+    #cors
+    CORS(app, origins=app.config["CORS_ORIGINS"])
+    
 
     #extensions
     db.init_app(app)
