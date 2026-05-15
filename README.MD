@@ -55,7 +55,7 @@ https://lemansachs29.github.io/FAIRTIP-API/
 
 See:
 
-- [Logical Model](./docs/LogicModel.md)
+- [Logical Model](./docs/logicModel.md)
 
 ---
 
