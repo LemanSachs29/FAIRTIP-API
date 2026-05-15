@@ -155,3 +155,23 @@ Possible future improvements:
 * scheduling integration,
 * export features,
 * and notifications.”
+
+---
+
+# Demo Accounts
+
+## Full Demo Account
+
+Email:
+demo.full@fairtip.com
+
+Password:
+Demo123!
+
+## Clean Demo Account
+
+Email:
+demo.clean@fairtip.com
+
+Password:
+Demo123!
