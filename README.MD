@@ -59,6 +59,13 @@ See:
 
 ---
 
+## Demo Accounts
+
+See:
+- [Demo Accounts](./docs/demo-accounts.md)
+
+---
+
 # Main Features
 
 - User authentication
