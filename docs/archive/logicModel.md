@@ -37,7 +37,7 @@ Table: distributions
 * total_tip_amount      DECIMAL(10,4) NOT NULL CHECK (total_tip_amount >= 0)
 * tip_per_hour          DECIMAL(10,4) NOT NULL CHECK (tip_per_hour >= 0)
 * total_exact_amount    DECIMAL(10,4) NOT NULL CHECK (total_exact_amount >= 0)
-* total_rounded_amount  DECIMAL(10,4) NOT NULL CHECK (total_rounded_amount >= 0)
+* total_roundgited_amount  DECIMAL(10,4) NOT NULL CHECK (total_rounded_amount >= 0)
 * remainder_amount      DECIMAL(10,4) NOT NULL CHECK (remainder_amount >= 0)
 * created_at            TIMESTAMP     NOT NULL
 * user_id               INT NOT NULL FK REFERENCES users(id)

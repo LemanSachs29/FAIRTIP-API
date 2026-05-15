@@ -49,7 +49,7 @@ https://lemansachs29.github.io/FAIRTIP-API/
 
 ## Conceptual Model
 
-![Conceptual Model](./docs/conceptual_model.svg)
+![Conceptual Model](./docs/conceptual-model.svg)
 
 ## Logical Database Model
 
