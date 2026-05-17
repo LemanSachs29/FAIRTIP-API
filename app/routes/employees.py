@@ -259,6 +259,25 @@ def delete_employee(employee_id):
     return jsonify({"message": "Employee deactivated"}), 200
 
 
+@employees_bp.patch("/<int:employee_id>/reactivate")
+@jwt_required()
+def reactivate_employee(employee_id):
+    user_id = int(get_jwt_identity())
+    employee = db.session.get(Employee, employee_id)
+
+    if employee is None or employee.user_id != user_id:
+        return jsonify({"error": "Employee not found"}), 404
+
+    try:
+        employee.is_active = True
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"error": "Could not reactivate employee"}), 500
+
+    return jsonify({"message": "Employee reactivated"}), 200
+
+
 @employees_bp.post("/<int:employee_id>/day-offs")
 @jwt_required()
 def create_employee_day_off(employee_id):
