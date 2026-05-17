@@ -15,6 +15,12 @@ class Employee(db.Model):
         nullable=False
     )
 
+    is_active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True
+    )
+
     created_at = db.Column(
         db.DateTime,
         nullable=False,

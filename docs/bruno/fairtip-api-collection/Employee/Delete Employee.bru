@@ -5,13 +5,13 @@ meta {
 }
 
 delete {
-  url: http://127.0.0.1:5000/employees/:employee_id
+  url: {{base_url}}/employees/:employee_id
   body: none
   auth: inherit
 }
 
 params:path {
-  employee_id: 9
+  employee_id: 8
 }
 
 settings {

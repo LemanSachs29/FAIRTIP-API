@@ -29,6 +29,7 @@ def serialize_employee(employee):
         "name": employee.name,
         "surname": employee.surname,
         "average_daily_hours": str(employee.average_daily_hours),
+        "is_active": employee.is_active,
         "created_at": employee.created_at.isoformat(),
         "updated_at": employee.updated_at.isoformat(),
     }
@@ -40,6 +41,7 @@ def serialize_employee_list_item(employee, day_offs, absence_count):
         "name": employee.name,
         "surname": employee.surname,
         "average_daily_hours": str(employee.average_daily_hours),
+        "is_active": employee.is_active,
         "day_offs": [day_off.weekday for day_off in day_offs],
         "absence_count_30d": absence_count,
         "created_at": employee.created_at.isoformat(),
@@ -104,13 +106,17 @@ def create_employee():
 @jwt_required()
 def list_employees():
     user_id = int(get_jwt_identity())
+    include_inactive = request.args.get("include_inactive", "").lower() == "true"
 
-    employees = (
+    employees_query = (
         Employee.query.options(selectinload(Employee.day_off_entries))
         .filter_by(user_id=user_id)
-        .order_by(Employee.id.asc())
-        .all()
     )
+
+    if not include_inactive:
+        employees_query = employees_query.filter_by(is_active=True)
+
+    employees = employees_query.order_by(Employee.id.asc()).all()
 
     # Query absence counts for the last 30 days
     thirty_days_ago = date.today() - timedelta(days=30)
@@ -244,15 +250,13 @@ def delete_employee(employee_id):
         return jsonify({"error": "Employee not found"}), 404
 
     try:
-        db.session.delete(employee)
+        employee.is_active = False
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return jsonify({
-        "error": "Could not delete employee. It may be linked to absences, day offs or distributions."
-        }), 409
+        return jsonify({"error": "Could not deactivate employee"}), 500
 
-    return jsonify({"message": "Employee deleted"}), 200
+    return jsonify({"message": "Employee deactivated"}), 200
 
 
 @employees_bp.post("/<int:employee_id>/day-offs")

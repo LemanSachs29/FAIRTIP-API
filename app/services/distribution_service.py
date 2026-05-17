@@ -18,7 +18,10 @@ def round_down_to_nearest_five(amount):
 
 
 def calculate_distribution(user_id, start_date, end_date, total_tip_amount):
-    employees = Employee.query.filter_by(user_id=user_id).order_by(Employee.id.asc()).all()
+    employees = Employee.query.filter_by(
+        user_id=user_id,
+        is_active=True,
+    ).order_by(Employee.id.asc()).all()
 
     if not employees:
         raise ValueError("No employees found for this user")
